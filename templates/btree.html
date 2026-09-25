@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}B-Tree Demo{% endblock %}
+{% block heading %}B-Tree Part Index (ADSA Unit 1){% endblock %}
+{% block subtitle %}In-memory multi-way balanced search tree for indexing Unit ID → Production Record{% endblock %}
+
+{% block content %}
+<!-- Theoretical & Separation Alert -->
+<div class="alert alert-info d-flex align-items-center gap-3 mb-4">
+  <i class="fa-solid fa-graduation-cap fa-2x text-primary"></i>
+  <div class="small">
+    <strong>ADSA Academic Concept Separation:</strong> While relational database engines (like MySQL InnoDB) manage internal disk B+Trees automatically, this module is an explicit, pure <strong>B-Tree implementation</strong> in <code>algorithms/btree.py</code> (minimum degree $t=3$). It directly demonstrates multi-way node branching, proactive splitting of full children, $O(t \log_t n)$ search complexity, and in-order sorted traversal.
+  </div>
+</div>
+
+{% if message %}
+<div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+  <i class="fa-solid fa-circle-check"></i>
+  <div>{{ message }}</div>
+</div>
+{% endif %}
+
+<!-- Action Controls Row -->
+<div class="row g-3 mb-4">
+  <!-- Search Card -->
+  <div class="col-lg-5">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-magnifying-glass text-primary"></i> Search Unit ID</h2>
+        <span class="badge text-bg-light border">O(t log<sub>t</sub> n)</span>
+      </div>
+      <form method="post">
+        <input type="hidden" name="action" value="search">
+        <div class="input-group mb-2">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-barcode"></i></span>
+          <input class="form-control" name="unit_id" value="{{ key or 'U10025' }}" placeholder="e.g. U10025" required>
+          <button class="btn btn-primary" type="submit">Search Tree</button>
+        </div>
+      </form>
+      <div class="d-flex align-items-center gap-1 mt-2">
+        <span class="small text-muted">Quick:</span>
+        <div class="quick-chips">
+          <a href="{{ url_for('main.btree_demo') }}?action=search&amp;unit_id=U10025" class="quick-chip">U10025</a>
+          <a href="{{ url_for('main.btree_demo') }}?action=search&amp;unit_id=U10042" class="quick-chip">U10042</a>
+          <a href="{{ url_for('main.btree_demo') }}?action=search&amp;unit_id=U10088" class="quick-chip">U10088</a>
+          <a href="{{ url_for('main.btree_demo') }}?action=search&amp;unit_id=U99999" class="quick-chip text-muted">U99999 (Miss)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insert Card -->
+  <div class="col-lg-4">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-plus text-success"></i> Insert Key</h2>
+        <span class="badge text-bg-light border">Dynamic Split</span>
+      </div>
+      <form method="post">
+        <input type="hidden" name="action" value="insert">
+        <div class="input-group mb-2">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-key"></i></span>
+          <input class="form-control" name="unit_id" placeholder="e.g. U10999" required>
+          <button class="btn btn-outline-success" type="submit">Insert</button>
+        </div>
+      </form>
+      <span class="small text-muted">Inserts in-memory; demonstrates non-full insertion and node splits.</span>
+    </div>
+  </div>
+
+  <!-- Maintenance / Stats Card -->
+  <div class="col-lg-3">
+    <div class="panel h-100 d-flex flex-column justify-content-between">
+      <div>
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-sync text-secondary"></i> Index Control</h2>
+        </div>
+        <form method="post">
+          <button class="btn btn-outline-secondary w-100 btn-sm mb-2" name="action" value="rebuild">
+            <i class="fa-solid fa-arrows-rotate"></i> Rebuild from DB
+          </button>
+        </form>
+      </div>
+      <div class="small text-muted">
+        <div>Total Keys: <strong>{{ traversal_count }}</strong></div>
+        <div>Minimum Degree ($t$): <strong>3</strong></div>
+        <div>Capacity per node: <strong>2 to 5 keys</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search Result Card -->
+{% if found %}
+<div class="panel mb-4" style="border-left: 5px solid #10b981;">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-circle-check text-success"></i> B-Tree Search Hit: Found Key {{ found.unit_id }}</h2>
+    <span class="status-pill status-{{ found.status|lower }}">
+      <span class="status-dot"></span>
+      {{ found.status }}
+    </span>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-3"><strong>Unit ID:</strong> <code class="id-badge">{{ found.unit_id }}</code></div>
+    <div class="col-md-3"><strong>Batch ID:</strong> {{ found.batch_id or 'N/A' }}</div>
+    <div class="col-md-3"><strong>Machine ID:</strong> {{ found.machine_id or 'N/A' }}</div>
+    <div class="col-md-3"><strong>Product:</strong> {{ found.product_name or 'N/A' }}</div>
+  </div>
+  <div class="mt-3 pt-2 border-top d-flex gap-2">
+    <a href="{{ url_for('main.trace_unit') }}?unit_id={{ found.unit_id }}" class="btn btn-sm btn-primary">
+      <i class="fa-solid fa-route"></i> Trace Full Lineage
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Visual Tree & ASCII Representation -->
+<div class="row g-4 mb-4">
+  <!-- ASCII / Structure View -->
+  <div class="col-lg-7">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-tree text-primary"></i> Tree Level Hierarchy (ASCII Output)</h2>
+        <span class="badge text-bg-light border">Root → Children</span>
+      </div>
+      <pre class="tree-view mb-0" style="max-height: 400px;">{{ display }}</pre>
+    </div>
+  </div>
+
+  <!-- ADSA Theoretical Rationale Card -->
+  <div class="col-lg-5">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-book-bookmark text-primary"></i> Why B-Trees in Production Systems?</h2>
+      </div>
+      <div class="small text-muted">
+        <p><strong>1. Minimizing Disk I/O:</strong> In secondary memory storage, disk seeks are thousands of times slower than RAM. A binary tree of 1,000,000 records has a height $\approx 20$ (20 disk seeks). A B-Tree with $t=100$ has a height $\le 3$ (only 3 disk seeks!).</p>
+        <p><strong>2. Self-Balancing Guarantee:</strong> All leaves remain at identical depth. Splitting happens from the bottom up on insert, guaranteeing $O(\log n)$ worst-case bounds.</p>
+        <p><strong>3. Range Queries:</strong> In-order traversal naturally yields sorted keys without costly post-sorting.</p>
+      </div>
+      <div class="p-2 bg-light rounded border small">
+        <strong>Complexity Formula:</strong><br>
+        Height: $h \le \log_t \frac{n+1}{2}$<br>
+        Search time: $O(t \cdot \log_t n)$
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- In-order Traversal Sample -->
+<div class="panel">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-list-ol text-primary"></i> In-Order Sorted Traversal (First 80 Keys)</h2>
+    <span class="badge bg-secondary">{{ traversal_count }} Total Keys</span>
+  </div>
+  <div class="d-flex flex-wrap gap-1 p-2 bg-light rounded border">
+    {% for key_item in traversal %}
+    <span class="badge bg-white text-dark border font-monospace">{{ key_item }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

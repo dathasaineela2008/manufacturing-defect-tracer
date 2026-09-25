@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Relational Algebra{% endblock %}
+{% block heading %}Relational Algebra Operations (DBMS Unit 2){% endblock %}
+{% block subtitle %}Formal mathematical operators σ, π, ⋈, ∪, ∩, −, × executed on live manufacturing relations{% endblock %}
+
+{% block content %}
+<!-- Operator Overview Banner -->
+<div class="panel mb-4 p-3 bg-light">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <h2 class="h6 mb-1 text-dark fw-bold"><i class="fa-solid fa-calculator text-primary me-1"></i> Relational Algebra Operator Toolkit:</h2>
+      <div class="small text-muted">
+        <strong>$\sigma$ (Selection)</strong>: Filter rows &bull; 
+        <strong>$\pi$ (Projection)</strong>: Filter columns &bull; 
+        <strong>$\bowtie$ (Natural/Inner Join)</strong>: Combine related tables &bull; 
+        <strong>$\cup$ (Union)</strong>: Set addition &bull; 
+        <strong>$\cap$ (Intersection)</strong>: Common tuples &bull; 
+        <strong>$-$ (Difference)</strong>: Set subtraction &bull; 
+        <strong>$\times$ (Cartesian Product)</strong>: Cross product
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Date Filter for Range Queries -->
+<form class="filter-bar mb-4" method="get">
+  <div class="d-flex align-items-center gap-2 flex-wrap w-100">
+    <label class="form-label mb-0 fw-bold small text-muted">
+      <i class="fa-solid fa-calendar me-1"></i> Temporal Query Date Range:
+    </label>
+    <div class="input-group" style="max-width: 220px;">
+      <span class="input-group-text small bg-light">From</span>
+      <input class="form-control form-control-sm" type="date" name="date_from" value="{{ date_from }}">
+    </div>
+    <div class="input-group" style="max-width: 220px;">
+      <span class="input-group-text small bg-light">To</span>
+      <input class="form-control form-control-sm" type="date" name="date_to" value="{{ date_to }}">
+    </div>
+    <button class="btn btn-sm btn-primary" type="submit">
+      <i class="fa-solid fa-filter"></i> Apply Temporal Range
+    </button>
+  </div>
+</form>
+
+<!-- Operations Loop -->
+<div class="row g-4">
+  {% for op in operations %}
+  <div class="col-12">
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="h5">
+          <i class="fa-solid fa-terminal text-primary me-2"></i> {{ op.title }}
+        </h2>
+        <span class="badge bg-primary rounded-pill px-3">{{ op.count }} Matched Tuples</span>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <!-- Relational Algebra Formula -->
+        <div class="col-md-6">
+          <div class="small fw-bold text-muted mb-1 text-uppercase" style="letter-spacing: 0.05em;">Relational Algebra Expression</div>
+          <div class="p-2 rounded bg-light border font-monospace text-primary fw-bold" style="font-size: 0.95rem;">
+            {{ op.algebra }}
+          </div>
+        </div>
+
+        <!-- Equivalent SQL Query -->
+        <div class="col-md-6">
+          <div class="small fw-bold text-muted mb-1 text-uppercase" style="letter-spacing: 0.05em;">Equivalent SQL Query</div>
+          <pre class="sql-view mb-0 p-2" style="font-size: 0.84rem;">{{ op.sql }}</pre>
+        </div>
+      </div>
+
+      <!-- Preview Tuples Table -->
+      <div class="table-responsive">
+        <table class="table table-sm table-striped table-hover mb-0">
+          {% if op.rows %}
+          <thead>
+            <tr>
+              {% for key in op.rows[0].keys() %}
+              <th>{{ key }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in op.rows %}
+            <tr>
+              {% for val in row.values() %}
+              <td>
+                {% if val is none %}
+                  <span class="text-muted fst-italic">NULL</span>
+                {% elif val == 'DEFECTIVE' %}
+                  <span class="status-pill status-defective"><span class="status-dot"></span>DEFECTIVE</span>
+                {% elif val == 'OK' %}
+                  <span class="status-pill status-ok"><span class="status-dot"></span>OK</span>
+                {% elif val == 'HIGH' or val == 'CRITICAL' %}
+                  <span class="status-pill status-critical"><span class="status-dot"></span>{{ val }}</span>
+                {% else %}
+                  {{ val }}
+                {% endif %}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% else %}
+          <tbody>
+            <tr>
+              <td class="text-center py-3 text-muted">
+                <i class="fa-solid fa-circle-info me-1"></i> Empty relation / Null result (e.g. valid intersection of disjoint OK and DEFECTIVE sets).
+              </td>
+            </tr>
+          </tbody>
+          {% endif %}
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small text-muted">
+        <span>Showing up to 8 sample tuples for responsive layout.</span>
+        <span>DBMS Unit 2 Relational Calculus &amp; Algebra Mapping</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

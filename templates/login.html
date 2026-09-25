@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | MDTPS — Manufacturing Defect Traceability</title>
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <div class="brand mb-4 justify-content-center border-0 p-0">
+      <div class="brand-mark">
+        <i class="fa-solid fa-microchip"></i>
+      </div>
+      <div>
+        <div class="brand-title text-dark" style="background: none; -webkit-text-fill-color: initial;">MDTPS</div>
+        <div class="text-muted" style="font-size: 0.76rem; font-weight: 600;">Defect Traceability System</div>
+      </div>
+    </div>
+
+    <div class="text-center mb-4">
+      <h1 class="h4 fw-bold mb-1">Welcome Back</h1>
+      <p class="text-muted small">Sign in to access shop-floor analytics and traceability</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else 'info' }} d-flex align-items-center gap-2 small py-2">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div>{{ message }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" novalidate>
+      <div class="mb-3">
+        <label class="form-label small fw-bold" for="username">Username</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0">
+            <i class="fa-solid fa-user"></i>
+          </span>
+          <input class="form-control border-start-0" id="username" name="username" placeholder="e.g. admin" required autocomplete="username">
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label small fw-bold" for="password">Password</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0">
+            <i class="fa-solid fa-lock"></i>
+          </span>
+          <input class="form-control border-start-0" id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+      </div>
+
+      <button class="btn btn-primary w-100 py-2 justify-content-center" type="submit">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>Sign In to Dashboard</span>
+      </button>
+    </form>
+
+    <div class="demo-box mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-bold text-dark"><i class="fa-solid fa-key text-warning me-1"></i> Academic Demo Credentials</span>
+        <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.74rem;" onclick="fillDemo()">
+          Auto-fill
+        </button>
+      </div>
+      <div class="d-flex justify-content-between small text-muted">
+        <span>Username: <code class="text-primary">admin</code></span>
+        <span>Password: <code class="text-primary">Admin@123</code></span>
+      </div>
+      <div class="mt-2 pt-2 border-top border-light text-muted" style="font-size: 0.72rem;">
+        <i class="fa-solid fa-shield-halved me-1 text-success"></i> Passwords securely verified via Werkzeug PBKDF2/SHA256 hashes.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function fillDemo() {
+      document.getElementById('username').value = 'admin';
+      document.getElementById('password').value = 'Admin@123';
+      document.getElementById('password').focus();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block heading %}Official Traceability &amp; Quality Reports{% endblock %}
+{% block subtitle %}Generate and export formal reports in CSV (Spreadsheets) and PDF (Print Documents){% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  {% for kind, label, icon, color, desc, fields in [
+    ('production', 'Production Units Report', 'fa-barcode', 'primary', 'Complete shop-floor registry of serialized manufactured units and inspection flags.', 'unit_id, serial_number, batch_id, product_name, machine_id, status'),
+    ('defect', 'Defect Log & Incident Report', 'fa-triangle-exclamation', 'danger', 'Audit log of all detected quality deviations, severity classes, and descriptions.', 'defect_id, unit_id, defect_type, severity, detected_date, batch_id'),
+    ('machine', 'Machine Asset Reliability Report', 'fa-gears', 'purple', 'Asset-level production volumes, recorded defect association, and maintenance dates.', 'machine_id, machine_name, total_units, defective_units, defect_rate, status'),
+    ('batch', 'Batch Run Summary Report', 'fa-layer-group', 'info', 'Aggregated performance metrics, process telemetry, and defect counts per production batch.', 'batch_id, product_name, machine_id, production_date, quantity, defects'),
+    ('traceability', 'Defect Lineage Traceability Report', 'fa-route', 'warning', 'Specific export of defective units mapped through Batch, Machine, and Product origins.', 'unit_id, serial_number, batch_id, product_name, machine_id, status'),
+    ('prediction', 'Predictive Model Architecture Report', 'fa-brain', 'success', 'Documentation of the Decision Tree model, training parameters, and hold-out accuracy.', 'model_type, features, test_accuracy, confusion_matrix, status')
+  ] %}
+  <div class="col-md-6 col-lg-4">
+    <div class="panel h-100 d-flex flex-column justify-content-between">
+      <div>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="stat-icon" style="--icon-bg: #f8fafc; --icon-color: var(--bs-{{ color }}); width: 44px; height: 44px; border: 1px solid var(--border-light);">
+            <i class="fa-solid {{ icon }}"></i>
+          </div>
+          <div>
+            <h2 class="h6 mb-0 fw-bold">{{ label }}</h2>
+            <span class="badge text-bg-light border text-muted" style="font-size: 0.72rem;">Live SQL Query Bundle</span>
+          </div>
+        </div>
+        <p class="small text-muted mb-3">{{ desc }}</p>
+        <div class="p-2 bg-light rounded border mb-3 small text-muted font-monospace" style="font-size: 0.75rem;">
+          <span class="fw-bold text-dark font-sans">Fields:</span> {{ fields }}
+        </div>
+      </div>
+      
+      <div class="d-flex gap-2 pt-2 border-top">
+        <a class="btn btn-outline-success btn-sm flex-grow-1 justify-content-center" href="{{ url_for('main.export_report', kind=kind, fmt='csv') }}">
+          <i class="fa-solid fa-file-csv"></i> CSV Export
+        </a>
+        <a class="btn btn-danger btn-sm flex-grow-1 justify-content-center" href="{{ url_for('main.export_report', kind=kind, fmt='pdf') }}">
+          <i class="fa-solid fa-file-pdf"></i> PDF Document
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

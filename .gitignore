@@ -1,0 +1,16 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+instance/test_mdtps.sqlite3
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

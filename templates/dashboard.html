@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Manufacturing Overview{% endblock %}
+{% block subtitle %}Shop-floor metrics, real-time defect distribution, and fast unit traceability{% endblock %}
+
+{% block content %}
+<!-- Quick Trace Hero Banner -->
+<div class="panel mb-4 p-4" style="background: linear-gradient(135deg, #0b132b 0%, #1e293b 100%); color: white; border: 1px solid rgba(255,255,255,0.1);">
+  <div class="row align-items-center">
+    <div class="col-lg-6 mb-3 mb-lg-0">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge bg-primary text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Problem Statement</span>
+        <span class="text-white-50 small">Trace defective unit to Product, Batch &amp; Machine</span>
+      </div>
+      <h2 class="h4 text-white fw-bold mb-2">Defect Traceability Engine</h2>
+      <p class="text-white-50 small mb-0">Identify which batch or machine produced a defective unit along with production time and shift parameters.</p>
+    </div>
+    <div class="col-lg-6">
+      <form action="{{ url_for('main.trace_unit') }}" method="get" class="d-flex gap-2">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-0 text-muted">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input class="form-control border-0 py-2" name="unit_id" placeholder="Enter Unit ID (e.g. U10025, U10042, U10088)" required>
+          <button class="btn btn-primary px-3" type="submit">
+            <span>Trace Unit</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </form>
+      <div class="d-flex align-items-center gap-2 mt-2">
+        <span class="text-white-50" style="font-size: 0.76rem;">Quick Samples:</span>
+        <div class="quick-chips">
+          <a href="{{ url_for('main.trace_unit') }}?unit_id=U10025" class="quick-chip bg-dark text-white border-secondary">
+            <i class="fa-solid fa-circle-exclamation text-danger"></i> U10025 (High Defect)
+          </a>
+          <a href="{{ url_for('main.trace_unit') }}?unit_id=U10042" class="quick-chip bg-dark text-white border-secondary">
+            <i class="fa-solid fa-circle-exclamation text-warning"></i> U10042 (Surface Flaw)
+          </a>
+          <a href="{{ url_for('main.trace_unit') }}?unit_id=U10014" class="quick-chip bg-dark text-white border-secondary">
+            <i class="fa-solid fa-circle-check text-success"></i> U10014 (Normal OK)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overview Metric Cards -->
+<div class="row g-3 mb-4">
+  <!-- Total Products -->
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card" style="--card-accent: #2563eb;">
+      <div class="stat-card-header">
+        <span class="stat-label">Products</span>
+        <div class="stat-icon" style="--icon-bg: #eff6ff; --icon-color: #2563eb;">
+          <i class="fa-solid fa-box-archive"></i>
+        </div>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats.total_products }}</div>
+        <div class="stat-meta">Active catalog items</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Batches -->
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card" style="--card-accent: #6366f1;">
+      <div class="stat-card-header">
+        <span class="stat-label">Batches</span>
+        <div class="stat-icon" style="--icon-bg: #eef2ff; --icon-color: #6366f1;">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats.total_batches }}</div>
+        <div class="stat-meta">Production runs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Machines -->
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card" style="--card-accent: #8b5cf6;">
+      <div class="stat-card-header">
+        <span class="stat-label">Machines</span>
+        <div class="stat-icon" style="--icon-bg: #f5f3ff; --icon-color: #8b5cf6;">
+          <i class="fa-solid fa-industry"></i>
+        </div>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats.total_machines }}</div>
+        <div class="stat-meta">Shop floor assets</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Units -->
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card" style="--card-accent: #06b6d4;">
+      <div class="stat-card-header">
+        <span class="stat-label">Units</span>
+        <div class="stat-icon" style="--icon-bg: #ecfeff; --icon-color: #06b6d4;">
+          <i class="fa-solid fa-barcode"></i>
+        </div>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats.total_units }}</div>
+        <div class="stat-meta">Serialized units</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Defective Units -->
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card" style="--card-accent: #ef4444;">
+      <div class="stat-card-header">
+        <span class="stat-label">Defects</span>
+        <div class="stat-icon" style="--icon-bg: #fef2f2; --icon-color: #ef4444;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+      </div>
+      <div>
+        <div class="stat-value text-danger">{{ stats.total_defective }}</div>
+        <div class="stat-meta text-danger">Recorded defective</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Defect Rate -->
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card" style="--card-accent: #f59e0b;">
+      <div class="stat-card-header">
+        <span class="stat-label">Defect Rate</span>
+        <div class="stat-icon" style="--icon-bg: #fffbeb; --icon-color: #f59e0b;">
+          <i class="fa-solid fa-percent"></i>
+        </div>
+      </div>
+      <div>
+        <div class="stat-value text-warning">{{ stats.defect_rate }}%</div>
+        <div class="stat-meta">Across all runs</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-gears text-primary"></i> Defects by Machine</h2>
+        <span class="badge text-bg-light border text-muted">Shop-Floor Distribution</span>
+      </div>
+      <div style="height: 260px; position: relative;">
+        <canvas id="chartMachine"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-box text-success"></i> Defects by Product</h2>
+        <span class="badge text-bg-light border text-muted">Catalog Analysis</span>
+      </div>
+      <div style="height: 260px; position: relative;">
+        <canvas id="chartProduct"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-tags text-warning"></i> Defects by Type</h2>
+        <span class="badge text-bg-light border text-muted">Failure Categories</span>
+      </div>
+      <div style="height: 260px; position: relative;">
+        <canvas id="chartType"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-shield-virus text-danger"></i> Defects by Severity</h2>
+        <span class="badge text-bg-light border text-muted">Risk Profile</span>
+      </div>
+      <div style="height: 260px; position: relative;">
+        <canvas id="chartSeverity"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-layer-group text-info"></i> Defects by Batch</h2>
+        <span class="badge text-bg-light border text-muted">Batch Associations</span>
+      </div>
+      <div style="height: 260px; position: relative;">
+        <canvas id="chartBatch"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-chart-line text-dark"></i> Defects Over Time</h2>
+        <span class="badge text-bg-light border text-muted">Chronological Trend</span>
+      </div>
+      <div style="height: 260px; position: relative;">
+        <canvas id="chartTime"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-info mt-4 d-flex align-items-center gap-3">
+  <i class="fa-solid fa-circle-info fa-2x text-primary"></i>
+  <div class="small">
+    <strong>Academic Methodology Note:</strong> Machine-wise defect counts represent <em>recorded database associations</em> from batches produced on those machines. In manufacturing engineering, recorded defect association does not establish direct mechanical causation without root-cause physical inspection.
+    Explore detailed breakdown on <a href="{{ url_for('main.machine_analysis') }}" class="fw-bold">Machine Analysis</a> and <a href="{{ url_for('main.batch_analysis') }}" class="fw-bold">Batch Analysis</a>.
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const charts = {{ charts|tojson }};
+function series(rows, x, y) {
+  return {
+    labels: (rows || []).map(r => r[x]),
+    values: (rows || []).map(r => Number(r[y] || 0))
+  };
+}
+
+// Chart Global Settings
+Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
+Chart.defaults.color = "#64748b";
+
+// Chart 1: Defects by Machine
+(function() {
+  const s = series(charts.by_machine, 'machine_id', 'defect_count');
+  const el = document.getElementById('chartMachine');
+  if (el) {
+    new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: s.labels,
+        datasets: [{
+          label: 'Defect Records',
+          data: s.values,
+          backgroundColor: '#3b82f6',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+})();
+
+// Chart 2: Defects by Product
+(function() {
+  const s = series(charts.by_product, 'product_name', 'defect_count');
+  const el = document.getElementById('chartProduct');
+  if (el) {
+    new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: s.labels,
+        datasets: [{
+          label: 'Defects',
+          data: s.values,
+          backgroundColor: '#10b981',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+})();
+
+// Chart 3: Defects by Type
+(function() {
+  const s = series(charts.by_type, 'defect_type', 'defect_count');
+  const el = document.getElementById('chartType');
+  if (el) {
+    new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: s.labels,
+        datasets: [{
+          label: 'Defects',
+          data: s.values,
+          backgroundColor: '#f59e0b',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+})();
+
+// Chart 4: Defects by Severity
+(function() {
+  const s = series(charts.by_severity, 'severity', 'defect_count');
+  const el = document.getElementById('chartSeverity');
+  if (el) {
+    const colors = s.labels.map(l => {
+      if (l === 'CRITICAL') return '#ef4444';
+      if (l === 'HIGH') return '#f97316';
+      if (l === 'MEDIUM') return '#f59e0b';
+      return '#3b82f6';
+    });
+    new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: s.labels,
+        datasets: [{
+          label: 'Count',
+          data: s.values,
+          backgroundColor: colors,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+})();
+
+// Chart 5: Defects by Batch
+(function() {
+  const s = series(charts.by_batch, 'batch_id', 'defect_count');
+  const el = document.getElementById('chartBatch');
+  if (el) {
+    new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: s.labels,
+        datasets: [{
+          label: 'Defects',
+          data: s.values,
+          backgroundColor: '#06b6d4',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+})();
+
+// Chart 6: Defects Over Time
+(function() {
+  const s = series(charts.over_time, 'defect_date', 'defect_count');
+  const el = document.getElementById('chartTime');
+  if (el) {
+    new Chart(el, {
+      type: 'line',
+      data: {
+        labels: s.labels,
+        datasets: [{
+          label: 'Defect Events',
+          data: s.values,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.08)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: '#2563eb',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { color: '#f1f5f9' } } }
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

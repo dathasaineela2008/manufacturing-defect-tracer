@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+{% block title %}Trace Defective Unit{% endblock %}
+{% block heading %}Defect Traceability Engine{% endblock %}
+{% block subtitle %}End-to-end lineage: Unit ID → Product → Batch → Machine → Date → Shift → Defect{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Form -->
+<div class="panel mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h6 mb-0 text-muted text-uppercase fw-bold" style="letter-spacing: 0.05em;">
+      <i class="fa-solid fa-magnifying-glass text-primary me-1"></i> Search Production Unit
+    </h2>
+    <span class="small text-muted">Supports Unit ID (e.g. U10025) or Serial Number (e.g. SN-041-0025)</span>
+  </div>
+  <form method="post" class="row g-2 align-items-center">
+    <div class="col-md-8 col-lg-9">
+      <div class="input-group">
+        <span class="input-group-text bg-light text-muted">
+          <i class="fa-solid fa-barcode"></i>
+        </span>
+        <input class="form-control" name="unit_id" value="{{ query }}" placeholder="Enter Unit ID or Serial Number (e.g. U10025)" required autofocus>
+      </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+      <button class="btn btn-primary w-100 justify-content-center" type="submit">
+        <i class="fa-solid fa-route"></i>
+        <span>Execute Trace</span>
+      </button>
+    </div>
+  </form>
+
+  <div class="d-flex align-items-center gap-2 mt-3 pt-2 border-top">
+    <span class="small text-muted fw-bold">Test Samples:</span>
+    <div class="quick-chips">
+      <a href="{{ url_for('main.trace_unit') }}?unit_id=U10025" class="quick-chip">
+        <i class="fa-solid fa-triangle-exclamation text-danger"></i> U10025 (High Defect)
+      </a>
+      <a href="{{ url_for('main.trace_unit') }}?unit_id=U10042" class="quick-chip">
+        <i class="fa-solid fa-triangle-exclamation text-warning"></i> U10042 (Surface Flaw)
+      </a>
+      <a href="{{ url_for('main.trace_unit') }}?unit_id=U10088" class="quick-chip">
+        <i class="fa-solid fa-triangle-exclamation text-warning"></i> U10088 (Leakage)
+      </a>
+      <a href="{{ url_for('main.trace_unit') }}?unit_id=U10014" class="quick-chip">
+        <i class="fa-solid fa-circle-check text-success"></i> U10014 (Normal OK)
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if result %}
+{% set u = result.unit %}
+{% set d = result.primary_defect %}
+
+<!-- Visual Interactive Trace Pipeline -->
+<div class="trace-pipeline">
+  <!-- Node 1: Unit -->
+  <div class="pipeline-node active">
+    <div class="pipeline-icon-circle">
+      <i class="fa-solid fa-barcode"></i>
+    </div>
+    <span class="pipeline-label">Production Unit</span>
+    <span class="pipeline-title">{{ u.unit_id }}</span>
+    <span class="pipeline-sub">{{ u.serial_number }}</span>
+  </div>
+
+  <div class="pipeline-arrow">
+    <i class="fa-solid fa-arrow-right"></i>
+  </div>
+
+  <!-- Node 2: Product -->
+  <div class="pipeline-node active">
+    <div class="pipeline-icon-circle">
+      <i class="fa-solid fa-box-archive"></i>
+    </div>
+    <span class="pipeline-label">Product Item</span>
+    <span class="pipeline-title">{{ u.product_name }}</span>
+    <span class="pipeline-sub">{{ u.product_id }} ({{ u.product_type }})</span>
+  </div>
+
+  <div class="pipeline-arrow">
+    <i class="fa-solid fa-arrow-right"></i>
+  </div>
+
+  <!-- Node 3: Batch -->
+  <div class="pipeline-node active">
+    <div class="pipeline-icon-circle">
+      <i class="fa-solid fa-layer-group"></i>
+    </div>
+    <span class="pipeline-label">Batch Run</span>
+    <span class="pipeline-title">{{ u.batch_id }}</span>
+    <span class="pipeline-sub">{{ u.production_date }} ({{ u.shift }})</span>
+  </div>
+
+  <div class="pipeline-arrow">
+    <i class="fa-solid fa-arrow-right"></i>
+  </div>
+
+  <!-- Node 4: Machine -->
+  <div class="pipeline-node active">
+    <div class="pipeline-icon-circle">
+      <i class="fa-solid fa-industry"></i>
+    </div>
+    <span class="pipeline-label">Produced On</span>
+    <span class="pipeline-title">{{ u.machine_name }}</span>
+    <span class="pipeline-sub">{{ u.machine_id }} ({{ u.location }})</span>
+  </div>
+
+  <div class="pipeline-arrow">
+    <i class="fa-solid fa-arrow-right"></i>
+  </div>
+
+  <!-- Node 5: Defect Status -->
+  <div class="pipeline-node {% if u.unit_status == 'DEFECTIVE' %}defect-node{% else %}active{% endif %}">
+    <div class="pipeline-icon-circle">
+      <i class="fa-solid {% if u.unit_status == 'DEFECTIVE' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+    </div>
+    <span class="pipeline-label">Quality Status</span>
+    <span class="pipeline-title">{{ d.defect_type if d else u.unit_status }}</span>
+    <span class="pipeline-sub">{{ d.severity ~ ' Severity' if d else 'Inspection Passed' }}</span>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Left Column: Detailed Metadata Cards -->
+  <div class="col-lg-6">
+    <!-- Unit & Quality Summary Card -->
+    <div class="panel mb-3">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-circle-info text-primary"></i> Unit Lineage Details</h2>
+        <span class="status-pill status-{{ u.unit_status|lower }}">
+          <span class="status-dot"></span>
+          {{ u.unit_status }}
+        </span>
+      </div>
+      <div class="table-responsive border-0">
+        <table class="table table-sm">
+          <tbody>
+            <tr><th class="w-40 text-muted">Unit ID:</th><td><code class="id-badge">{{ u.unit_id }}</code></td></tr>
+            <tr><th class="text-muted">Serial Number:</th><td><strong>{{ u.serial_number }}</strong></td></tr>
+            <tr><th class="text-muted">Product:</th><td>{{ u.product_name }} ({{ u.product_id }})</td></tr>
+            <tr><th class="text-muted">Batch ID:</th><td><a href="{{ url_for('main.production') }}?q={{ u.batch_id }}" class="fw-bold">{{ u.batch_id }}</a></td></tr>
+            <tr><th class="text-muted">Machine:</th><td><strong>{{ u.machine_name }}</strong> ({{ u.machine_id }})</td></tr>
+            <tr><th class="text-muted">Production Timestamp:</th><td>{{ u.production_time }}</td></tr>
+            <tr><th class="text-muted">Shift:</th><td><span class="badge text-bg-light border">{{ u.shift }}</span></td></tr>
+            <tr><th class="text-muted">Process Conditions:</th><td>Temp: <strong>{{ u.temperature_c }}°C</strong> | Pressure: <strong>{{ u.pressure_bar }} bar</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Machine Status & Maintenance Warning -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-screwdriver-wrench text-warning"></i> Machine Diagnostic Context</h2>
+        <span class="status-pill status-{{ u.machine_status|lower }}">
+          <span class="status-dot"></span>
+          {{ u.machine_status }}
+        </span>
+      </div>
+      <p class="small mb-2">Operating hours: <strong>{{ u.operating_hours }} hrs</strong> | Shop floor bay: <strong>{{ u.location }}</strong></p>
+      {% if result.last_maintenance %}
+      <div class="p-2 rounded bg-light border small">
+        <div><strong>Last Maintenance Record:</strong> {{ result.last_maintenance.maintenance_date }}</div>
+        <div>Type: {{ result.last_maintenance.maintenance_type }} | Status: <span class="badge text-bg-secondary">{{ result.last_maintenance.status }}</span></div>
+        {% if result.last_maintenance.notes %}<div class="text-muted mt-1"><em>Notes: {{ result.last_maintenance.notes }}</em></div>{% endif %}
+      </div>
+      {% endif %}
+      {% if u.machine_status == 'MAINTENANCE_REQUIRED' %}
+      <div class="alert alert-danger small mb-0 mt-3 d-flex align-items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span><strong>Shop-floor Alert:</strong> Machine {{ u.machine_id }} is currently flagged as MAINTENANCE REQUIRED.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Column: Standard Academic Output Terminal Box -->
+  <div class="col-lg-6">
+    <div class="panel h-100 d-flex flex-column justify-content-between">
+      <div>
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-terminal text-success"></i> Academic Output Box (Format Spec)</h2>
+          <button type="button" class="btn btn-sm btn-outline-secondary py-1" onclick="copyTraceBox()">
+            <i class="fa-regular fa-copy"></i> Copy
+          </button>
+        </div>
+        <pre class="trace-box mb-3" id="traceOutputPre">================================================
+             DEFECT TRACEABILITY
+================================================
+
+Unit ID       : {{ u.unit_id }}
+Product       : {{ u.product_name }}
+Batch ID      : {{ u.batch_id }}
+Machine ID    : {{ u.machine_id }}
+Machine Name  : {{ u.machine_name }}
+Production    : {{ u.production_date }}
+Shift         : {{ u.shift }}
+Defect        : {{ d.defect_type if d else 'None recorded' }}
+Severity      : {{ d.severity if d else 'N/A' }}
+
+Machine Status: {{ u.machine_status }}
+
+Possible Source:
+Machine {{ u.machine_id }} / Batch {{ u.batch_id }}
+
+================================================</pre>
+      </div>
+
+      <!-- Cross-Subject Deep-Dive Actions -->
+      <div class="p-3 bg-light rounded border">
+        <div class="fw-bold small text-dark mb-2">Subject Demonstrations for this Unit:</div>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.btree_demo') }}?action=search&amp;unit_id={{ u.unit_id }}">
+            <i class="fa-solid fa-network-wired"></i> ADSA B-Tree Index Search
+          </a>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('main.relational_demo') }}">
+            <i class="fa-solid fa-calculator"></i> Relational Algebra Equivalence
+          </a>
+          <a class="btn btn-sm btn-outline-dark" href="{{ url_for('main.export_report', kind='traceability', fmt='pdf') }}">
+            <i class="fa-solid fa-file-pdf text-danger"></i> Export PDF Trace Sheet
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- All Recorded Defects on this Unit -->
+{% if result.defects %}
+<div class="panel mb-4">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-bug text-danger"></i> All Recorded Defects for Unit {{ u.unit_id }}</h2>
+    <span class="badge bg-danger">{{ result.defects|length }} Record(s)</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Defect ID</th>
+          <th>Defect Type</th>
+          <th>Severity</th>
+          <th>Detected Date</th>
+          <th>Description &amp; Observations</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in result.defects %}
+        <tr>
+          <td><code class="id-badge">{{ item.defect_id }}</code></td>
+          <td><strong>{{ item.defect_type }}</strong></td>
+          <td>
+            <span class="status-pill status-{{ item.severity|lower }}">
+              <span class="status-dot"></span>
+              {{ item.severity }}
+            </span>
+          </td>
+          <td>{{ item.detected_date }}</td>
+          <td>{{ item.description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyTraceBox() {
+  const pre = document.getElementById('traceOutputPre');
+  if (pre) {
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      alert("Defect traceability text copied to clipboard!");
+    });
+  }
+}
+</script>
+{% endblock %}

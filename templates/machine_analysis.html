@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Machine Analysis{% endblock %}
+{% block heading %}Shop-Floor Machine Performance Analysis{% endblock %}
+{% block subtitle %}Defect rates, production volume, and maintenance history by machine asset{% endblock %}
+
+{% block content %}
+<!-- Academic Causation vs Association Callout -->
+<div class="alert alert-info d-flex align-items-center gap-3 mb-4">
+  <i class="fa-solid fa-scale-balanced fa-2x text-primary"></i>
+  <div class="small">
+    <strong>Scientific Integrity Note (Association vs. Causation):</strong> A higher recorded defect count on a machine indicates that more defective units were produced during batches assigned to that asset. However, recorded association does not automatically imply mechanical failure (e.g. raw material anomalies, tooling wear, or operational temperature variances may also contribute). Root-cause analysis requires physical inspection.
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-gears text-primary"></i> Machine Asset Health &amp; Defect Distribution</h2>
+    <span class="badge text-bg-light border">{{ rows|length }} Machines Monitored</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Machine ID</th>
+          <th>Asset Name</th>
+          <th>Operational Status</th>
+          <th>Total Units</th>
+          <th>Defective Units</th>
+          <th>Defect Rate</th>
+          <th>Last Maintenance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td><code class="id-badge">{{ row.machine_id }}</code></td>
+          <td><strong>{{ row.machine_name }}</strong></td>
+          <td>
+            <span class="status-pill status-{{ row.status|lower }}">
+              <span class="status-dot"></span>
+              {{ row.status }}
+            </span>
+          </td>
+          <td>{{ row.total_units or 0 }}</td>
+          <td>
+            {% if row.defective_units and row.defective_units > 0 %}
+              <span class="text-danger fw-bold">{{ row.defective_units }}</span>
+            {% else %}
+              <span class="text-muted">0</span>
+            {% endif %}
+          </td>
+          <td style="min-width: 140px;">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small fw-bold">{{ row.defect_rate }}%</span>
+              <div class="progress flex-grow-1" style="height: 6px;">
+                <div class="progress-bar {% if row.defect_rate > 15 %}bg-danger{% elif row.defect_rate > 5 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ row.defect_rate }}%;"></div>
+              </div>
+            </div>
+          </td>
+          <td class="small">{{ row.last_maintenance or '—' }}</td>
+          <td>
+            <a href="{{ url_for('main.batches') }}?q={{ row.machine_id }}" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.78rem;">
+              <i class="fa-solid fa-layer-group"></i> Batches
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

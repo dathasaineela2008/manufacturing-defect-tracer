@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}About Project &amp; Syllabus Mapping{% endblock %}
+{% block heading %}Academic System Architecture &amp; Syllabus Mapping{% endblock %}
+{% block subtitle %}Comprehensive cross-subject mapping across DBMS, DMGT, ADSA, OOPJ, and Python ML{% endblock %}
+
+{% block content %}
+<!-- Problem Statement Panel -->
+<div class="panel mb-4" style="border-left: 5px solid #2563eb;">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-bullseye text-primary"></i> Academic Problem Statement</h2>
+  </div>
+  <blockquote class="blockquote mb-0 fs-6">
+    <p class="mb-2"><em>"A manufacturer cannot trace which batch or machine produced a defective unit."</em></p>
+    <footer class="blockquote-footer mt-1 text-muted">
+      <strong>MDTPS Solution:</strong> Provides deterministic backward and forward lineage tracing from any serialized <code>Unit ID</code> back to its <strong>Product catalog specification, Batch production run, Machine shop-floor asset, Production date &amp; shift, and Defect inspection history</strong>, backed by mathematical relations and supervised probability prediction.
+    </footer>
+  </blockquote>
+</div>
+
+<!-- Subject Mapping Table -->
+<div class="panel mb-4">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-graduation-cap text-primary"></i> Subject-Wise Syllabus Mapping</h2>
+    <span class="badge text-bg-light border">Curriculum Alignment</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Syllabus Unit &amp; Concept</th>
+          <th>Concrete Project Implementation</th>
+          <th>Live Demonstration Page</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge bg-primary">DBMS</span></td>
+          <td><strong>Unit 1 — ER Model &amp; Normalization</strong></td>
+          <td>Normalized 3NF relational schema: <code>product</code>, <code>machine</code>, <code>batch</code>, <code>production_unit</code>, <code>defect</code>, <code>machine_maintenance</code> with PKs, FKs, and constraints.</td>
+          <td><a href="#er-diagram" class="btn btn-xs btn-outline-primary py-0 px-2">ER Model Below</a></td>
+        </tr>
+        <tr>
+          <td><span class="badge bg-primary">DBMS</span></td>
+          <td><strong>Unit 2 — Relational Algebra</strong></td>
+          <td>Explicit algebraic operators $\sigma$ (selection), $\pi$ (projection), $\bowtie$ (join), $\cup$ (union), $\cap$ (intersection), $-$ (difference), $\times$ (Cartesian) with standard SQL equivalents.</td>
+          <td><a href="{{ url_for('main.relational_demo') }}" class="btn btn-xs btn-outline-primary py-0 px-2">Relational Algebra</a></td>
+        </tr>
+        <tr>
+          <td><span class="badge bg-success">DMGT</span></td>
+          <td><strong>Unit 2 — Relations &amp; Discrete Math</strong></td>
+          <td>Mathematical sets $P, M, B, U, D$, ordered pairs, domains, codomains, reflexivity, symmetry, transitivity, and same-machine equivalence relations.</td>
+          <td><a href="#dmgt-relations" class="btn btn-xs btn-outline-success py-0 px-2">DMGT Section</a></td>
+        </tr>
+        <tr>
+          <td><span class="badge bg-warning text-dark">ADSA</span></td>
+          <td><strong>Unit 1 — B-Tree Indexing</strong></td>
+          <td>Pure in-memory B-Tree ($t=3$) in <code>algorithms/btree.py</code> indexing <code>Unit ID → Production Record</code> with $O(t \log_t n)$ search and proactive node splits.</td>
+          <td><a href="{{ url_for('main.btree_demo') }}" class="btn btn-xs btn-outline-warning py-0 px-2">B-Tree Demo</a></td>
+        </tr>
+        <tr>
+          <td><span class="badge bg-purple text-white" style="background-color: #8b5cf6;">OOPJ</span></td>
+          <td><strong>Object-Oriented Design</strong></td>
+          <td>Abstract base class <code>ProductionEntity</code>, inheritance (<code>Product</code>, <code>Machine</code>, <code>Batch</code>), encapsulation (private attributes, properties), polymorphism, and custom exceptions.</td>
+          <td><a href="#oopj-design" class="btn btn-xs btn-outline-secondary py-0 px-2">OOPJ Architecture</a></td>
+        </tr>
+        <tr>
+          <td><span class="badge bg-info text-dark">Python</span></td>
+          <td><strong>Supervised Classification (ML)</strong></td>
+          <td>Telemetry feature preprocessing, categorical encoding, scikit-learn Decision Tree, probability calibration, risk scoring (HIGH, MEDIUM, LOW), and confusion matrix.</td>
+          <td><a href="{{ url_for('main.prediction') }}" class="btn btn-xs btn-outline-info py-0 px-2">Defect Prediction</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ER Diagram Section -->
+<div class="panel mb-4" id="er-diagram">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-diagram-project text-primary"></i> Relational Database Entity-Relationship (ER) Architecture</h2>
+    <span class="badge text-bg-light border">3NF Relational Model</span>
+  </div>
+  <pre class="tree-view mb-3">=============================================================================
+                          ENTITY-RELATIONSHIP MODEL
+=============================================================================
+
+  PRODUCT (1)
+     │
+     │ 1:M (has many batches)
+     ▼
+   BATCH (M) ◄──────── M:1 (produced on machine) ──────── MACHINE (1)
+     │                                                      │
+     │ 1:M (contains serialized units)                      │ 1:M (undergoes maintenance)
+     ▼                                                      ▼
+PRODUCTION_UNIT (M)                                    MAINTENANCE (M)
+     │
+     │ 1:0..M (quality inspection logs)
+     ▼
+   DEFECT (M)
+
+=============================================================================
+Cardinality &amp; Referential Constraints:
+- PRODUCT (product_id PK, product_name UNIQUE)
+- MACHINE (machine_id PK, status CHECK)
+- BATCH (batch_id PK, product_id FK -> PRODUCT, machine_id FK -> MACHINE)
+- PRODUCTION_UNIT (unit_id PK, batch_id FK -> BATCH, serial_number UNIQUE)
+- DEFECT (defect_id PK, unit_id FK -> PRODUCTION_UNIT, severity CHECK)
+- MACHINE_MAINTENANCE (maintenance_id PK, machine_id FK -> MACHINE)
+=============================================================================</pre>
+  <div class="row g-3 small text-muted">
+    <div class="col-md-4">
+      <strong>1NF (First Normal Form):</strong> Atomic attributes, single-valued cells, unique column names, defined primary keys.
+    </div>
+    <div class="col-md-4">
+      <strong>2NF (Second Normal Form):</strong> In 1NF and no partial dependencies on composite candidate keys.
+    </div>
+    <div class="col-md-4">
+      <strong>3NF (Third Normal Form):</strong> In 2NF and zero transitive dependencies ($X \to Y \to Z$ eliminated by separating entities).
+    </div>
+  </div>
+</div>
+
+<!-- DMGT Relations Section -->
+{% if dmgt %}
+<div class="panel mb-4" id="dmgt-relations">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-square-root-variable text-success"></i> DMGT Unit 2 Relations &amp; Discrete Mathematics</h2>
+    <span class="badge text-bg-success">Live Evaluation</span>
+  </div>
+  <p class="small text-muted">{{ dmgt.trace_explanation }}</p>
+
+  <div class="row g-3">
+    {% for key, rel in [
+      ('product_batch', dmgt.product_batch),
+      ('batch_machine', dmgt.batch_machine),
+      ('unit_defect', dmgt.unit_defect),
+      ('same_machine_sample', dmgt.same_machine_sample)
+    ] %}
+    <div class="col-md-6">
+      <div class="p-3 rounded border bg-light h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong class="text-dark">{{ rel.name }}</strong>
+          <span class="badge bg-secondary">{{ rel.pair_count }} Ordered Pairs</span>
+        </div>
+        <p class="small text-muted mb-2">{{ rel.meaning }}</p>
+        <div class="d-flex flex-wrap gap-1 mb-2" style="font-size: 0.76rem;">
+          <span class="badge text-bg-light border">Reflexive: <strong>{{ rel.reflexive }}</strong></span>
+          <span class="badge text-bg-light border">Symmetric: <strong>{{ rel.symmetric }}</strong></span>
+          <span class="badge text-bg-light border">Transitive: <strong>{{ rel.transitive }}</strong></span>
+          <span class="badge {% if rel.equivalence %}bg-success text-white{% else %}text-bg-light border{% endif %}">
+            Equivalence: <strong>{{ rel.equivalence }}</strong>
+          </span>
+        </div>
+        <div class="small text-muted mb-2"><em>{{ rel.note }}</em></div>
+        <div class="font-monospace small p-2 bg-white rounded border" style="font-size: 0.74rem;">
+          {{ rel.sample_pairs }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- OOPJ Architecture Section -->
+<div class="panel mb-4" id="oopj-design">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-code text-purple"></i> OOPJ Object-Oriented Architecture (app/models.py)</h2>
+    <span class="badge text-bg-light border">Design Patterns</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped">
+      <thead>
+        <tr>
+          <th>Class Name</th>
+          <th>Parent Superclass</th>
+          <th>OOP Principle Demonstrated</th>
+          <th>Key Responsibility in Project</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>ProductionEntity</code></td>
+          <td><code>abc.ABC</code></td>
+          <td><strong>Abstraction</strong></td>
+          <td>Abstract base class declaring <code>@abstractmethod def summary(self)</code> and encapsulated ID/name.</td>
+        </tr>
+        <tr>
+          <td><code>Product</code></td>
+          <td><code>ProductionEntity</code></td>
+          <td><strong>Inheritance &amp; Polymorphism</strong></td>
+          <td>Inherits base identity and overrides <code>summary()</code> to format product catalog details.</td>
+        </tr>
+        <tr>
+          <td><code>Machine</code></td>
+          <td><code>ProductionEntity</code></td>
+          <td><strong>Inheritance &amp; Encapsulation</strong></td>
+          <td>Inherits identity and exposes helper method <code>needs_maintenance()</code> based on asset state.</td>
+        </tr>
+        <tr>
+          <td><code>Batch</code></td>
+          <td><code>ProductionEntity</code></td>
+          <td><strong>Inheritance</strong></td>
+          <td>Represents manufacturing run connecting product, machine, date, quantity, and shift.</td>
+        </tr>
+        <tr>
+          <td><code>ProductionUnit</code></td>
+          <td><code>object</code></td>
+          <td><strong>Encapsulation</strong></td>
+          <td>Maintains serialized unit identity, candidate key serial number, and status check method.</td>
+        </tr>
+        <tr>
+          <td><code>Defect</code></td>
+          <td><code>object</code></td>
+          <td><strong>Domain Modeling</strong></td>
+          <td>Encapsulates defect event, classification, severity tier, and detection timestamp.</td>
+        </tr>
+        <tr>
+          <td><code>TraceabilityService</code></td>
+          <td><code>object</code></td>
+          <td><strong>Service Pattern</strong></td>
+          <td>Encapsulates complex multi-table SQL join lineage queries into clean domain methods.</td>
+        </tr>
+        <tr>
+          <td><code>BTree</code></td>
+          <td><code>object</code></td>
+          <td><strong>Algorithmic Data Structure</strong></td>
+          <td>Implements ADSA multi-way search tree with self-balancing node splits.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Academic Disclaimer -->
+<div class="panel">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-shield-halved text-secondary"></i> Academic Disclaimer</h2>
+  </div>
+  <p class="small text-muted mb-0">
+    All products, machine designations, batch codes, telemetry variables, and defect occurrences presented in this software system are synthetic sample records constructed for educational university coursework demonstration. The machine learning classifier is calibrated strictly for conceptual demonstration and does not reflect actual commercial manufacturing defect rates.
+  </p>
+</div>
+{% endblock %}

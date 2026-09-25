@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Defect Events{% endblock %}
+{% block heading %}Defect Logs &amp; Quality Incidents{% endblock %}
+{% block subtitle %}Non-conformance records linked to serialized production units{% endblock %}
+
+{% block content %}
+<!-- Search & Severity Filter Bar -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <form class="filter-bar m-0 flex-grow-1" method="get">
+    <div class="row g-2 align-items-center w-100">
+      <div class="col-md-7">
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+          <input class="form-control" name="q" value="{{ q }}" placeholder="Search Defect ID, Unit ID, or Defect Type">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" name="severity">
+          <option value="">All Severity Tiers</option>
+          {% for s in ['LOW','MEDIUM','HIGH','CRITICAL'] %}
+          <option value="{{ s }}" {% if severity==s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button class="btn btn-primary w-100 justify-content-center" type="submit">Filter</button>
+        {% if q or severity %}
+        <a href="{{ url_for('main.defects') }}" class="btn btn-outline-secondary">Reset</a>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+  <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#addDefectCollapse">
+    <i class="fa-solid fa-plus"></i> Record Defect
+  </button>
+</div>
+
+<!-- Add Defect Collapsible Panel -->
+<div class="collapse mb-4" id="addDefectCollapse">
+  <div class="panel border-danger">
+    <div class="panel-header">
+      <h2><i class="fa-solid fa-triangle-exclamation text-danger"></i> Log Quality Defect Incident</h2>
+    </div>
+    <form method="post" class="row g-3">
+      <div class="col-md-2">
+        <label class="form-label small fw-bold">Defect ID (PK)</label>
+        <input class="form-control" name="defect_id" placeholder="e.g. D10051" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold">Affected Unit ID (FK)</label>
+        <input class="form-control" name="unit_id" placeholder="e.g. U10025" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-bold">Defect Classification</label>
+        <input class="form-control" name="defect_type" placeholder="e.g. Dimensional Variance" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold">Severity Tier</label>
+        <select class="form-select" name="severity">
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HIGH" selected>HIGH</option>
+          <option value="CRITICAL">CRITICAL</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-bold">Detected Date</label>
+        <input class="form-control" type="date" name="detected_date" required>
+      </div>
+      <div class="col-12">
+        <label class="form-label small fw-bold">Technical Description / Root Cause Observation</label>
+        <input class="form-control" name="description" placeholder="Describe the physical non-conformance observation">
+      </div>
+      <div class="col-12 text-end">
+        <button class="btn btn-danger" type="submit">
+          <i class="fa-solid fa-check"></i> Save Defect (Updates Unit Status to DEFECTIVE)
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Defects Table Panel -->
+<div class="panel">
+  <div class="panel-header">
+    <h2><i class="fa-solid fa-bug text-danger"></i> Recorded Quality Defects</h2>
+    <span class="badge text-bg-light border">{{ rows|length }} Defects</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Defect ID</th>
+          <th>Unit ID</th>
+          <th>Serial Number</th>
+          <th>Batch Run</th>
+          <th>Defect Classification</th>
+          <th>Severity Level</th>
+          <th>Detection Date</th>
+          <th>Lineage Trace</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in rows %}
+        <tr>
+          <td><code class="id-badge text-danger" style="background: #fef2f2; border-color: #fecaca;">{{ row.defect_id }}</code></td>
+          <td><code class="id-badge">{{ row.unit_id }}</code></td>
+          <td><strong>{{ row.serial_number }}</strong></td>
+          <td><a href="{{ url_for('main.production', q=row.batch_id) }}">{{ row.batch_id }}</a></td>
+          <td><strong>{{ row.defect_type }}</strong></td>
+          <td>
+            <span class="status-pill status-{{ row.severity|lower }}">
+              <span class="status-dot"></span>
+              {{ row.severity }}
+            </span>
+          </td>
+          <td>{{ row.detected_date }}</td>
+          <td>
+            <a href="{{ url_for('main.trace_unit', unit_id=row.unit_id) }}" class="btn btn-xs btn-primary py-0 px-2" style="font-size: 0.78rem;">
+              <i class="fa-solid fa-route"></i> Trace Origin
+            </a>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-4 text-muted">
+            <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i> No defects found matching criteria.
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

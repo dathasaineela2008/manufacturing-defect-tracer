@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block heading %}HTTP Status {{ code }}{% endblock %}
+{% block subtitle %}The requested operational resource encountered an issue{% endblock %}
+
+{% block content %}
+<div class="panel text-center py-5">
+  <div class="mb-3">
+    <i class="fa-solid {% if code == 404 %}fa-compass fa-4x text-warning{% else %}fa-triangle-exclamation fa-4x text-danger{% endif %}"></i>
+  </div>
+  <h2 class="h4 fw-bold mb-2">{% if code == 404 %}Page / Resource Not Found{% else %}System Error Encountered{% endif %}</h2>
+  <p class="text-muted max-w-md mx-auto mb-4">{{ message }}</p>
+  <div class="d-flex justify-content-center gap-2">
+    <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">
+      <i class="fa-solid fa-house"></i> Return to Dashboard
+    </a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('main.trace_unit') }}">
+      <i class="fa-solid fa-route"></i> Defect Traceability
+    </a>
+  </div>
+</div>
+{% endblock %}
