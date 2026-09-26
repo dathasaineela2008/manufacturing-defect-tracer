@@ -15,22 +15,26 @@ if str(ROOT) not in sys.path:
 
 # Handle Vercel serverless read-only filesystem:
 # In Vercel serverless environments, only /tmp is writable.
-if os.getenv("VERCEL") or not os.getenv("DB_ENGINE") or os.getenv("DB_ENGINE") == "sqlite":
-    import shutil
-    tmp_db = Path("/tmp/mdtps.sqlite3")
-    src_db = ROOT / "instance" / "mdtps.sqlite3"
-    
-    if not tmp_db.exists() and src_db.exists():
-        tmp_db.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src_db, tmp_db)
-        os.environ["SQLITE_PATH"] = str(tmp_db)
-    elif not tmp_db.exists():
-        # Fallback to direct seeding if bundled file is missing
-        from app.seed import seed_all
-        os.environ["SQLITE_PATH"] = str(tmp_db)
-        seed_all()
-    else:
-        os.environ["SQLITE_PATH"] = str(tmp_db)
+if os.getenv("VERCEL"):
+    if not os.getenv("DB_ENGINE"):
+        os.environ["DB_ENGINE"] = "sqlite"
+
+    if os.environ.get("DB_ENGINE") == "sqlite":
+        import shutil
+        tmp_db = Path("/tmp/mdtps.sqlite3")
+        src_db = ROOT / "instance" / "mdtps.sqlite3"
+        
+        if not tmp_db.exists() and src_db.exists():
+            tmp_db.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src_db, tmp_db)
+            os.environ["SQLITE_PATH"] = str(tmp_db)
+        elif not tmp_db.exists():
+            from app.seed import seed_all
+            os.environ["SQLITE_PATH"] = str(tmp_db)
+            seed_all()
+        else:
+            os.environ["SQLITE_PATH"] = str(tmp_db)
+
 
 from app import create_app
 
