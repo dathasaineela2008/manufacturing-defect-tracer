@@ -38,3 +38,8 @@ def create_app() -> Flask:
         ), 500
 
     return app
+
+
+# Module-level WSGI instance so both 'gunicorn app:app' and 'gunicorn run:app' work
+app = create_app()
+
