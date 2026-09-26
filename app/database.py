@@ -26,8 +26,9 @@ class DatabaseError(Exception):
 
 
 def _engine() -> str:
-    default_engine = "sqlite" if os.getenv("VERCEL") else "mysql"
+    default_engine = "sqlite" if (os.getenv("VERCEL") or os.getenv("RENDER")) else "mysql"
     return os.getenv("DB_ENGINE", default_engine).strip().lower()
+
 
 
 def mysql_config() -> Dict[str, Any]:
