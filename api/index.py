@@ -41,5 +41,33 @@ from app import create_app
 # Vercel needs the WSGI callable named 'app'
 app = create_app()
 
+
+class VercelPathFixMiddleware:
+    """Ensures Flask receives the intended PATH_INFO under Vercel rewrites."""
+
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        path_info = environ.get("PATH_INFO", "")
+        if path_info in ("/api/index.py", "/api/index", "/api", ""):
+            real_uri = (
+                environ.get("HTTP_X_FORWARDED_URI")
+                or environ.get("REQUEST_URI")
+                or environ.get("RAW_URI")
+                or "/"
+            )
+            real_path = real_uri.split("?")[0]
+            if real_path and not real_path.startswith("/api/index"):
+                environ["PATH_INFO"] = real_path
+            else:
+                environ["PATH_INFO"] = "/"
+
+        return self.wsgi_app(environ, start_response)
+
+
+app.wsgi_app = VercelPathFixMiddleware(app.wsgi_app)
+
 if __name__ == "__main__":
     app.run()
+

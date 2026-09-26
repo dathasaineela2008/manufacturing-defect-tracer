@@ -16,7 +16,10 @@ from flask import (
     url_for,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+from pathlib import Path
 import io
+
+ROOT = Path(__file__).resolve().parent.parent
 
 from app import catalog
 from app.btree import btree_index
@@ -65,10 +68,32 @@ def inject_user():
 
 
 @bp.route("/")
+@bp.route("/api/index.py")
+@bp.route("/api/index")
+@bp.route("/api")
 def home():
     if session.get("user_id"):
         return redirect(url_for("main.dashboard"))
     return redirect(url_for("main.login"))
+
+
+@bp.route("/static/<path:filename>")
+def static_proxy(filename: str):
+    from flask import send_from_directory
+    return send_from_directory(str(ROOT / "static"), filename)
+
+
+@bp.route("/css/<path:filename>")
+def css_proxy(filename: str):
+    from flask import send_from_directory
+    return send_from_directory(str(ROOT / "static" / "css"), filename)
+
+
+@bp.route("/js/<path:filename>")
+def js_proxy(filename: str):
+    from flask import send_from_directory
+    return send_from_directory(str(ROOT / "static" / "js"), filename)
+
 
 
 @bp.route("/login", methods=["GET", "POST"])
